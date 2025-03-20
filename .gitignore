@@ -1,0 +1,12 @@
+# Byte-compiled files
+__pycache…_/
+*. py[cod]
+# Virtual Environments
+venv/
+*. venv
+• env
+# OS generated files
+DS_Store
+Thumbs. db
+# Log and databases
+*. 1og
