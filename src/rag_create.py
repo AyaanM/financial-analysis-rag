@@ -1,22 +1,58 @@
-import os
+import os, re
 from langchain_community.document_loaders import CSVLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-def open_financial_projections():
+def loadPDF():
     '''
-    opens finacial projections csv, formats as needed, adds to database
+    opens pdfs, and format as needed
     '''
-    path_finances = 'data/finances/' #finances folder with document statements
+    data_path = 'data/' #finances folder with document statements
+    all_docs = []
 
-    for filename in os.listdir(path_finances):
-        file_path = os.path.join(path_finances, filename)
+    """ for filename in os.listdir(data_path):
+        if filename.endswith('.pdf'):
+            file_path = os.path.join(data_path, filename)
 
-        csv = CSVLoader(file_path=file_path).load()
+            loader = PyPDFLoader(file_path)
+            doc = loader.load()
 
-        #split docs
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-        split_docs = text_splitter.split_documents(csv)
+            for page in doc:
+                page.page_content = format_doc(page.page_content)
 
-        print(split_docs[0])  #preview of doc
+            # Split and add PDF documents
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            split_docs = text_splitter.split_documents(pdf_docs)
+            all_docs.extend(split_docs)
 
-open_financial_projections()
+            print(f"Successfully loaded: {filename}") """
+
+    ### TESTING SINCE MANY DOCS TAKE TOO LONG
+    file_path = os.path.join(data_path, "Building Financial Models (John Tjia) (Z-Library).pdf")
+
+    loader = PyPDFLoader(file_path)
+    doc = loader.load()
+
+    for page in doc:
+        page.page_content = format_doc(page.page_content)
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    split_docs = text_splitter.split_documents(doc)
+    all_docs.extend(split_docs)
+
+    print(all_docs)
+
+    return all_docs
+
+def format_doc(doc):
+    '''
+    format each page of pdf for easier reading
+    '''
+    re.sub(r'\n+', '\n', doc) ##replace multiple newlines with single
+    re.sub(r'\s+', ' ', doc) ##replace multiple spaces with single space
+    re.sub(r'[^\x00-\x7F]+', ' ', doc)  # Remove non-ASCII chars - assume they can't be processed by text
+    doc = doc.strip()
+    return doc
+
+#processData()
+loadPDF()
