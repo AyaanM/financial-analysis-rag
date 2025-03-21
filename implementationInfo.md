@@ -24,7 +24,13 @@ This RAG will not be run locally, as thats very computationally expensive, the t
     need to retrieve data with vector embeddings, allows to search for meaning and similarities
     data is unstructured, need to find similar vectors in vector space
 
-
+### Embedding Model
+- Use of ~text-embedding-ada-002~ initially
+  - Cost: ~0.0001 cents per token
+  - General embedding model, runs on cloud, fast run, low cost
+- For scalabiilty can switch to ~FinBert~ (Open Source Hugging Face)[https://huggingface.co/ProsusAI/finbert]
+  - No cost if embeddings are done locally -> no per token costs, but requires alot of GPU resources
+  - Fine tuned on financial analysis text
 
 
 
