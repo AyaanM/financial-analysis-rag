@@ -7,7 +7,6 @@ please note, to load the file, the filename must end with ".pdf"
 import os, re
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import random
 
 def loadPDF():
     '''
@@ -61,5 +60,3 @@ def format_doc(doc):
     return doc
 
 loadPDF()
-
-
