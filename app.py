@@ -1,7 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 #from flask import Flask, request, jsonify #only for web server llm type stuff, not needed right now
 import torch #operations to handle model no gradient
-from . import pdf_load
+import faiss
+import numpy as np
+from src import pdf_load
 
 tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
 model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")

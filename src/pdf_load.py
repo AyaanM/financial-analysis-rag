@@ -5,9 +5,9 @@ please note, to load the file, the filename must end with ".pdf"
 '''
 
 import os, re
-from langchain_community.document_loaders import CSVLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import random
 
 def loadPDF():
     '''
@@ -39,8 +39,7 @@ def loadPDF():
                 total_char_count += len(page.page_content)
                 total_token_count += len(page.page_content) / 4 #since 1 token is 4 chars
 
-            # Split and add PDF documents
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=25)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=35) #chunk pdf for better results, overlap to maintain context
             split_docs = text_splitter.split_documents(doc)
             all_docs.extend(split_docs)
 
@@ -62,4 +61,5 @@ def format_doc(doc):
     return doc
 
 loadPDF()
+
 

@@ -1,3 +1,5 @@
 torch
 transformers
-langchain
+langchain cli
+faiss-cpu
+numpy
