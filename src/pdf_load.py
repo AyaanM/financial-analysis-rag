@@ -1,3 +1,9 @@
+'''
+author: Ayaan
+This file is to load the pdfs, which will later be tokenized and turned into vectors
+please note, to load the file, the filename must end with ".pdf"
+'''
+
 import os, re
 from langchain_community.document_loaders import CSVLoader
 from langchain_community.document_loaders import PyPDFLoader
@@ -13,8 +19,15 @@ def loadPDF():
     total_token_count = 0
     total_char_count = 0
 
-    """ for filename in os.listdir(data_path):
-        if filename.endswith('.pdf'):
+    for filename in os.listdir(data_path):
+        #re init at 0 for each pdg
+        pages_num = 0
+        total_token_count = 0
+        total_char_count = 0
+
+        file_path = os.path.join(data_path, filename)
+
+        if filename.endswith('.pdf'): #only if its a pdf - double check to avoid errors
             file_path = os.path.join(data_path, filename)
 
             loader = PyPDFLoader(file_path)
@@ -22,38 +35,19 @@ def loadPDF():
 
             for page in doc:
                 page.page_content = format_doc(page.page_content)
+                pages_num += 1
+                total_char_count += len(page.page_content)
+                total_token_count += len(page.page_content) / 4 #since 1 token is 4 chars
 
             # Split and add PDF documents
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=25)
-            split_docs = text_splitter.split_documents(pdf_docs)
+            split_docs = text_splitter.split_documents(doc)
             all_docs.extend(split_docs)
 
-            print(f"-------- PDF INFO for {filename}.pdf --------")
+            print(f"-------- PDF INFO for {filename} --------")
             print(f'''Number of Pages in PDF: {pages_num}
 Number of Characters in PDF: {total_char_count}
-Number of Tokens in PDF: {total_token_count}''') """
-
-    ### TESTING SINCE MANY DOCS TAKE TOO LONG
-    file_path = os.path.join(data_path, "Building Financial Models (John Tjia) (Z-Library).pdf")
-
-    loader = PyPDFLoader(file_path)
-    doc = loader.load()
-
-    for page in doc:
-        page.page_content = format_doc(page.page_content)
-        pages_num += 1
-        total_char_count += len(page.page_content)
-        total_token_count += len(page.page_content) / 4 #since 1 token is 4 chars
-        
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=25)
-    split_docs = text_splitter.split_documents(doc)
-
-    all_docs.extend(split_docs)
-
-    print("-------- PDF INFO for Building Financial Models (John Tjia) (Z-Library).pdf --------")
-    print(f'''Number of Pages in PDF: {pages_num}
-Number of Characters in PDF: {total_char_count}
-Number of Tokens in PDF: {total_token_count}''') #122824.75 tokens, cost = (122824.75 / 1,000) * 0.0001 = 0.012282475 
+Number of Tokens in PDF: {total_token_count}''')
 
     return all_docs
 
@@ -67,6 +61,5 @@ def format_doc(doc):
     doc = doc.strip()
     return doc
 
-#processData()
 loadPDF()
 
