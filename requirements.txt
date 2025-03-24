@@ -1,5 +1,7 @@
 torch
 transformers
-langchain cli
+langchain
+langchain_community
+pypdf
 faiss-cpu
 numpy

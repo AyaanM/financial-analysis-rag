@@ -1,50 +1,48 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-#from flask import Flask, request, jsonify #only for web server llm type stuff, not needed right now
-import torch #operations to handle model no gradient
+from transformers import AutoTokenizer, AutoModel
+import torch
 import faiss
-from langchain.vectorstores import FAISS
-import pandas as pd #to visualize vector db better
 import numpy as np
+from langchain.vectorstores import FAISS
 from src import pdf_load
 
-tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
-model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
+# Load FinBERT
+MODEL_NAME = "ProsusAI/finbert"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModel.from_pretrained(MODEL_NAME)
 
-def getEmbeddings(): 
-    '''
-    Embedding basically captures sentence similarity meaning, no matching by word
-    Comverts text into tokens thru tokenizer
-    Sends those tokens in the embedding model to create vectors
-    '''
-    texts = pdf_load.loadPDF()
+def getFinBertEmbeddings(texts):
+    """Generate embeddings from FinBERT"""
+    embeddings_list = []
+    batch_size = 32  # Adjust based on available resources
 
-    embeddings_list = [] 
-    
-    for text in texts: #loop thru each pdf, create tokens individually
-        tokens = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512) #convert to tokens
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i:i + batch_size]
 
-        with torch.no_grad(): #disable gradient calculation for less computation usage
-            outputs = model(**tokens) #feeds tokens into model and create vectors
+        tokens = tokenizer(batch_texts, padding=True, truncation=True, return_tensors="pt", max_length=512)
 
-        embeddings_list.append(outputs.last_hidden_state[:, 0, :].squeeze().tolist()) #[:, 0, :] for CLS (classification token prepend)
-    
-    return embeddings_list
+        with torch.no_grad():
+            outputs = model(**tokens)  # Forward pass
 
-def saveEmbeddingsFaiss(embeddings_list):
-    '''
-    save embeddings to fasiss vector database for similarity search, use elucidean L2 distance
-    '''
-    embeddings_array = np.array(embeddings_list).astype('float32')
+        cls_embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()  # Extract CLS token
+        embeddings_list.extend(cls_embeddings)
 
-    index = faiss.IndexFlatL2(embeddings_array.shape[1]) #eucildean distance search (measures straight line between points for similarity search)
-    index.add(embeddings_array)
+        if i % 100 == 0:
+            print(f"Processed {i+1}/{len(texts)} texts")
+
+    return np.array(embeddings_list)
+
+def saveEmbeddingsFaiss():
+    texts = [doc.page_content for doc in pdf_load.loadPDF()]  # Extract text from documents
+    embeddings = getFinBertEmbeddings(texts)
+
+    # Create FAISS index
+    d = embeddings.shape[1]  # Dimension of embeddings
+    index = faiss.IndexFlatL2(d)
+    index.add(embeddings)  # Add embeddings to FAISS
+
+    # Save FAISS index
+    faiss.write_index(index, "faiss_db.idx")
+    print("Embeddings saved to FAISS index!")
 
 if __name__ == "__main__":
-    embeddings = getEmbeddings() 
-    faiss_db = saveEmbeddingsFaiss(embeddings)
-
-    faiss.write_index(faiss_db, 'faiss_db.idx') #save fiass db as index for future reference
-
-    #test if it actually works
-    print("faiss_db.idx")
-    print("Embeddings saved to FAISS index!")
+    saveEmbeddingsFaiss()
