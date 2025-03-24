@@ -3,5 +3,5 @@ transformers
 langchain
 langchain_community
 pypdf
-faiss-cpu
 numpy
+pandas

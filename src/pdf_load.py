@@ -14,9 +14,6 @@ def loadPDF():
     '''
     data_path = 'data/' #finances folder with document statements
     all_docs = []
-    pages_num = 0
-    total_token_count = 0
-    total_char_count = 0
 
     for filename in os.listdir(data_path):
         #re init at 0 for each pdg
@@ -32,9 +29,10 @@ def loadPDF():
             loader = PyPDFLoader(file_path)
             doc = loader.load()
 
+            pages_num = len(doc)
+
             for page in doc:
                 page.page_content = format_doc(page.page_content)
-                pages_num += 1
                 total_char_count += len(page.page_content)
                 total_token_count += len(page.page_content) / 4 #since 1 token is 4 chars
 
@@ -53,10 +51,9 @@ def format_doc(doc):
     '''
     format each page of pdf for easier reading
     '''
-    re.sub(r'\n+', '\n', doc) ##replace multiple newlines with single
-    re.sub(r'\s+', ' ', doc) ##replace multiple spaces with single space
-    re.sub(r'[^\x00-\x7F]+', ' ', doc)  # Remove non-ASCII chars - assume they can't be processed by text
+    doc = re.sub(r'\n+', '\n', doc) ##replace multiple newlines with single
+    doc = re.sub(r'\s+', ' ', doc) ##replace multiple spaces with single space
+    doc = re.sub(r'[^\x00-\x7F]+', ' ', doc)  # Remove non-ASCII chars - assume they can't be processed by text
     doc = doc.strip()
     return doc
 
-loadPDF()
