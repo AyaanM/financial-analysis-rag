@@ -3,7 +3,7 @@ import torch
 import faiss
 import numpy as np
 import pandas as pd
-from src import pdf_load
+import pdf_load
 
 MODEL_NAME = "ProsusAI/finbert" #replace with if any other model used later
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -46,7 +46,7 @@ def saveEmbeddingsFaiss():
     index.add(embeddings)  #add embeddings to index
 
     # Save FAISS index
-    faiss.write_index(index, "faiss_db.idx")
+    faiss.write_index(index, "rag_index/faiss_db.idx")
     print("Embeddings saved to FAISS index!")
 
 def visualizeIndex():
@@ -63,7 +63,7 @@ def visualizeIndex():
 
     df.insert(0, "Text", texts) #put original texts in data frame
 
-    df.to_csv('visualizedIndex.csv')
+    df.to_csv('rag_index/visualizedIndex.csv')
 
     print(df.head()) #print first few rows
 
