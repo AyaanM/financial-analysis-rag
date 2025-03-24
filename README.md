@@ -18,7 +18,12 @@ The platform must generate best case, nomral case, and worst case scenarios usin
 
 Risk analysis may be performed. Beyond this, an LLM will be able to answer user queries by looking at the insights generated.
 
+# How to work this model
+- The FIASS vector database has already been generated - its stored in a file called faiss_db.idx
+- This data can also be visualized through a pandas dataframe called visualizedIndex.csv
 
-
-
-Install Langchain community
+### If you wish to retrain the model, follow the steps below
+    - Open this project up in the Google Codespace from Main
+      - While thats what was done to intially train the model, an alternative could be to do it more locally on a PC with a powerful GPU
+    - Run the following command ~pip install -r requirements.txt~
+      - This will install all the necessary libraries to 
