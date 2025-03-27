@@ -22,30 +22,31 @@ Risk analysis may be performed. Beyond this, an LLM will be able to answer user 
 - The model is too large to push through Github or any other remote server, perhaps AWS/Azure might work
 - To run this model you will have to train it on your computer in order to get the vector database
 
-## Step 1: (Re)training the Model (time taken by all the steps depend heavily on GPU specs)
+# (Re)training the Model (time taken by all the steps depend heavily on GPU specs)
   - Any data must be stored under the ~/data~ folder
-  - Currently the model can only be trained on pdfs, to change and process files of other format, edit ~src/pdf_load.py~
-  ### Option 1: Train the model locally
+  - Currently the model can only be trained on pdfs, to change and process files of other format, edit ~index_creation/pdf_load.py~
+
+  ## Option 1: Train the model locally
     - Open up this Github repository in any IDE
     - Run ~pip install -r requirements.txt~ on your terminal
-    - Run ~python3 src/app.py~ on your terminal
-  ### Option 2: Train the model using Github codespaces (cloud)
+    - Run ~python3 index_creation/index_create.py~ on your terminal
+  ## Option 2: Train the model using Github codespaces (cloud)
     - On the github repository for this project open up Github Codespaces for main
     - Run ~pip install -r requirements.txt~ on the Codespace terminal
-    - Run ~python3 src/app.py~ on the Codespace terminal
-  ### Option 3: Train the model using Google Colab (cloud)
+    - Run ~python3 index_creation/index_create.py~ on the Codespace terminal
+  ## Option 3: Train the model using Google Colab (cloud)
     - Download ~src/collab_rag.ipynb~ on your computer
     - Upload that file to Google Collab
     - On the top menu click ~Runtime -> Run All~
-  ### Option 4: Train the model using a provider such as Microsoft Azure/AWS
+  ## Option 4: Train the model using a provider such as Microsoft Azure/AWS
     - This may be necessary if more data needs to be processed
     - Can get expesive really fast so I didn't test this option
-  ### Upon Training
+  ## Upon Training
     - The vector database, and a visualization dataframe will be stored under ~rag_index~
     - If training takes too long or shows ~Terminated~, try the following steps
       - Training on a different computer 
       - Training on differnt Google Collab Runtime
-      - Reducing the ~batch_size~ variable in ~src/app.py~ or ~scr/collab_rag.ipyn~
+      - Reducing the ~batch_size~ variable in ~python3 index_creation/index_create.py~ or ~index_creation/collab_rag.ipynb~
       - Reducing/Cleaning up the data files under ~/data~
     - You can push any changes to Github as required, the index database will be skipped as it can't be pushed to github
     - To uninstall any libries, run ~pip uninstall -r requirements.txt~ on your/Codespace terminal

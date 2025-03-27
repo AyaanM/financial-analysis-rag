@@ -42,7 +42,9 @@ def saveEmbeddingsFaiss():
 
     # Create FAISS index
     dimention = embeddings.shape[1] #dimension = length of vector
+
     index = faiss.IndexFlatL2(dimention) #use L2 Eucdlian distance to get all points between vectors
+    faiss.normalize_L2(embeddings) #search is based on angle between vectors (not magnitudes) - might be useful, if not, can remove no harm
     index.add(embeddings)  #add embeddings to index
 
     # Save FAISS index
