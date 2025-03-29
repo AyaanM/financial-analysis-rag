@@ -13,13 +13,6 @@ MODEL_NAME = "ProsusAI/finbert"
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 
-def load_faiss_index():
-    '''
-    load faiss index
-    '''
-    index = faiss.read_index("rag_index/faiss_db.idx")
-    print("FAISS index loaded successfully!")
-    return index 
 
 def search_index(financial_embedding, k=5):
     '''
@@ -27,11 +20,13 @@ def search_index(financial_embedding, k=5):
     distances: euclidian distance of k closest vectors from query (smaller distance = closer)
     index: approx nearest neighbours containing indicies of query vectors
     '''
-    index = load_faiss_index()
+    index = faiss.read_index("rag_index/faiss_db.idx") #read index
 
-    #search for most similar vectors to query
+    #normalize for cosine similarity (angled for better responses) - can remove if wanted
+    faiss.normalize_L2(financial_embedding)
+    faiss.normalize_L2(index.reconstruct_n(0, index.ntotal)) 
+
     distances, indices = index.search(np.array(financial_embedding).reshape(1, -1), k) #search in faiss index
-
     return indices, distances #return for top k vectors
 
 def get_financial_embedding(financial_projection):
@@ -86,7 +81,10 @@ def generate_advice_from_similar_projections(financial_embedding):
     similar_projections = search_data(indices)
 
     advice = []
-    for projection in search_similar_projections:
+    for projection in similar_projections:
+        
+        projection = f"{projection}" #string conversion so model can analyze
+
         sentiment = analyze_sentiment(projection)
         
         # Generate advice based on sentiment

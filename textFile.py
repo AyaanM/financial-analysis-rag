@@ -3,7 +3,7 @@ import torch
 import faiss
 import numpy as np
 from transformers import AutoTokenizer, AutoModel
-import frontEndLLM
+import main
 import pandas as pd
 
 # Load FinBERT model for sentiment analysis
