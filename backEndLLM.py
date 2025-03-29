@@ -1,71 +1,139 @@
 '''
 BackEnd of The LLM
-Various function from the frontend are triggered
+The front end triggers backEndHelper which creates embeddings, sentiments using sentiment model
+The sentiments are then, using the inputted financial projections and vector database used to prompt an LLM
+This LLM provides advice which is fed back to main frontend
 '''
 import random, torch, faiss, numpy as np, pandas as pd
 from index_creation import pdf_load
-import faiss
-import numpy as np
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModel, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 
-MODEL_NAME = "ProsusAI/finbert"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+# Load embedding and sentiment model
+# THIS MODEL MUST BE THE SAME AS WHAT WE TRAINED VECTOR INDEX ON
+MODEL_NAME_SENTIMENT = "ProsusAI/finbert" #change if wanting to use any other sentiment model
+tokenizer_sentiment = AutoTokenizer.from_pretrained(MODEL_NAME_SENTIMENT)
+model_sentiment = AutoModel.from_pretrained(MODEL_NAME_SENTIMENT)
+model_embeddings_sentiment = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME_SENTIMENT)
 
+# Load LLM Model for prompt response generation
+MODEL_NAME_LLM = "google/flan-t5-large" #change if wanting to use any other text gen
+tokenizer_llm = AutoTokenizer.from_pretrained("google/flan-t5-large")
+model_llm = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-large")
 
+### ========== FAISS INDEX SEARCH ========== ###
 def search_index(financial_embedding, k=5):
     '''
     Search FAISS index for top-k similar projections (default is 5).
-    distances: Euclidean distance of k closest vectors from the query (smaller distance = closer).
-    index: Approx nearest neighbors containing indices of query vectors.
     '''
-    # Read the FAISS index
     index = faiss.read_index("rag_index/faiss_db.idx")
-
-    # Normalize embeddings to for consine, angled similarity (optional, can be removed if not needed)
-    faiss.normalize_L2(financial_embedding)  
-
-    # Perform the search in FAISS index
-    distances, indices = index.search(np.array(financial_embedding).reshape(1, -1), k) 
-
-    return indices, distances  # Return the indices of the top k similar projections
-
+    faiss.normalize_L2(financial_embedding)  # Normalize if cosine similarity is used
+    print(f"Index loaded. Number of vectors: {index.ntotal}")
+    distances, indices = index.search(np.array(financial_embedding).reshape(1, -1), k)
+    print(f"Retrieved indices: {indices}, Distances: {distances}")
+    return indices, distances
 
 def search_data(indices):
     '''
-    look at where indicies lie in text
+    Look at where indices lie in text and return similar documents
+    Combine all documents for better context visualization
     '''
     text = pdf_load.loadPDF()
-
     similar_texts = []
 
     for idx in indices[0]:
-        projection = text[idx]  # Retrieve the financial projection corresponding to the index
-        similar_texts.append(projection)  # Add it to the list of similar texts
-    
-    return similar_texts
+        projection = text[idx]
+        similar_texts.append(projection)
 
-#### STEPS FOR FINBERT ANALYSIS
+    random.shuffle(similar_texts)
+
+    combined_context = " ".join([doc.page_content for doc in similar_texts])
+    return combined_context
+
+def get_embedding(projection):
+    '''
+    embed all financial projections using finbert
+    '''
+    projection_dict = (
+        f"Revenue: {projection['revenue']}, "
+        f"Expenses: {projection['expenses']}, "
+        f"Profits: {projection['profits']}, "
+        f"Cashflow: {projection['cashflow']}, "
+        f"Capital Needed: {projection['capital_need']}"
+    )
+
+    tokens = tokenizer_sentiment(projection_dict, padding=True, truncation=True, return_tensors="pt", max_length=512)
+    with torch.no_grad():
+        output = model_sentiment(**tokens)
+    cls_embedding = output.last_hidden_state.mean(dim=1).cpu().numpy()
+    return cls_embedding
+
 def analyze_sentiment(text):
     '''
-    Take in the text, pass it through FinBERT, and return the sentiment.
+    feed in similar_text from data and get text sentiment
     '''
-    text = f"text" #make the text a string
 
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-
+    inputs = tokenizer_sentiment(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
-        outputs = model(**inputs)
-
+        outputs = model_embeddings_sentiment(**inputs)
     prediction = torch.argmax(outputs.logits, dim=1).item()
-
     sentiments = {0: "negative", 1: "neutral", 2: "positive"}
     return sentiments[prediction]
-    
+
 def sentiment_helper(financial_embedding):
-    indices, distances = search_index(financial_embedding, k=5) #search projections based on projections
+    '''
+    Search FAISS and run sentiment analysis on retrieved documents.
+    '''
+    indices, distances = search_index(financial_embedding, k=5)
     similar_projections = search_data(indices)
 
     sentiment = analyze_sentiment(similar_projections)
-    return sentiment
+    return sentiment, similar_projections
+
+### ========== LLM FINANCIAL ADVICE ========== ###
+def generate_advice(sentiment, financial_data, context):
+    '''
+    Generate actionable advice using chosen LLM
+    - sentiment: sentiment generated by sentiment model
+    - financial_data: inputted financial projections from user
+    - context: similar projections from faiss database
+    '''
+    prompt = f"""
+### Instruction:
+You are a highly experienced financial analyst with expertise in optimizing financial performance.
+The company's financial projection data and sentiment are provided below:
+
+### Input:
+Financial Projection:
+- Revenue: ${financial_data['revenue']}
+- Expenses: ${financial_data['expenses']}
+- Profits: ${financial_data['profits']}
+- Cashflow: {financial_data['cashflow']}
+- Capital Needed: ${financial_data['capital_need']}
+
+Sentiment Analysis: {sentiment}
+
+Contextual Insights from Similar Companies:
+{context}
+
+Your recommendations should be based on industry best practices, financial trends, and the provided data
+Generate 3-4 actionable, data-driven, and quantifiable recommendations that aim to:
+1. Increase revenue or reduce expenses by at least 10%.
+2. Optimize cash flow to maintain a positive balance.
+3. Improve capital efficiency and ROI.
+"""
+    print(f"This is the Prompt that was fed into {MODEL_NAME_LLM}, Sentiment Analysis conducted using {MODEL_NAME_SENTIMENT} ")
+    print(prompt)
+
+    # Tokenize prompt and generate advice
+    inputs = tokenizer_llm(prompt, return_tensors="pt", max_length=512, truncation=True)
+    output = model_llm.generate(**inputs, max_length=515, num_return_sequences=1, early_stopping=True) #generated in terms of tokens
+    advice = tokenizer_llm.decode(output[0], skip_special_tokens=True)
+    
+    return advice
+
+def backEnd_Helper(projection):
+    embedding = get_embedding(projection)
+    sentiment, context = sentiment_helper(embedding)
+
+    advice = generate_advice(sentiment, projection, context)
+    return advice
