@@ -80,9 +80,10 @@ This default program uses FinBerg to analyze the sentiment of financial projecti
 - This is becasue the data that is inputed is useless to our model as its not numeric or quantitative
 - In order to change this data, replace files in `data` folder and retrain the model
 ### Image of current output (with problem)
-![Image of current output (with problem)][img/problamatic.png])
+![Problem Output](img/problematic.png)
+
 
 ### Image when we use custom data and manipulate prompt (shows the type of output we desire)
-![Image of current output (with problem)][img/proper.png])
+![Better Output](img/proper.png)
 
 
