@@ -39,6 +39,38 @@ def get_embedding(projection):
     #print(cls_embedding)
     return cls_embedding
 
+def generate_advice(sentiment, financial_data):
+    advice = []
+    
+    # Example financial data
+    revenue = financial_data['revenue']
+    expenses = financial_data['expenses']
+    profits = financial_data['profits']
+    profit_margin = profits / revenue
+    cash_flow = financial_data['cashflow']
+    capital_needed = financial_data['capital_need']
+    
+    if sentiment == "positive":
+        print("hi")
+        # if profit_margin > 0.2:
+        #     advice.append("The company is in a strong position with high profit margins. Consider reinvesting in marketing or R&D for further growth.")
+        # if revenue > 100000:
+        #     advice.append("With strong revenue, you should consider exploring new business opportunities or geographic expansion.")
+    elif sentiment == "neutral":
+        print("days")
+        # if expenses are increasing but revenue is steady, suggest focusing on **cost optimization**:
+        #     advice.append("Revenue is steady, but costs are creeping up. Review your operational efficiency and renegotiate supplier contracts.")
+        # if cash_flow is low:
+        #     advice.append("Cash flow is low; focus on improving receivables or deferring capital expenditures.")
+    elif sentiment == "negative":
+        print("low")
+        # if profit_margin < 0.1:
+        #     advice.append("Profit margins are below expectations. Consider revisiting your pricing strategy and cutting non-essential expenses.")
+        # if cash_flow is negative:
+        #     advice.append("Negative cash flow is a concern. You should focus on reducing operational costs and improving liquidity.")
+    
+    return advice
+
 def main(csv_path):
     '''
     load projections, and for each
@@ -47,9 +79,9 @@ def main(csv_path):
     
     for projection in projections:
         embedding = get_embedding(projection)
-        
-        # Generate actionable advice
-        advice = backEndLLM.generate_advice_from_similar_projections(embedding)
+        sentiment = backEndLLM.sentiment_helper(embedding)
+
+        advice = generate_advice(sentiment, projection)
         print(f"Advice for Month {projection['month']}:\n{advice}\n")
 
 if __name__ == "__main__":

@@ -51,6 +51,8 @@ def analyze_sentiment(text):
     '''
     Take in the text, pass it through FinBERT, and return the sentiment.
     '''
+    text = f"text" #make the text a string
+
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
 
     with torch.no_grad():
@@ -61,26 +63,9 @@ def analyze_sentiment(text):
     sentiments = {0: "negative", 1: "neutral", 2: "positive"}
     return sentiments[prediction]
     
-def generate_advice_from_similar_projections(financial_embedding):
+def sentiment_helper(financial_embedding):
     indices, distances = search_index(financial_embedding, k=5) #search projections based on projections
     similar_projections = search_data(indices)
 
-    advice = []
-    for projection in similar_projections:
-        print(projection)
-        
-        projection = f"{projection}" #string conversion so model can analyze
-
-        sentiment = analyze_sentiment(projection)
-        
-        # Generate advice based on sentiment
-        if sentiment == "positive":
-            sentiment_advice = "This projection has positive sentiment. You might consider expanding investments."
-        elif sentiment == "neutral":
-            sentiment_advice = "The sentiment is neutral. Keep monitoring the market and adjust accordingly."
-        else:
-            sentiment_advice = "This projection has negative sentiment. Consider re-evaluating your strategy."
-        
-        advice.append(f"Projection Sentiment: {sentiment}, Advice: {sentiment_advice}")
-    
-    return advice
+    sentiment = analyze_sentiment(similar_projections)
+    return sentiment
