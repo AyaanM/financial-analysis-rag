@@ -115,6 +115,7 @@ Sentiment Analysis: {sentiment}
 Contextual Insights from Similar Companies:
 {context}
 
+### Response:
 Your recommendations should be based on industry best practices, financial trends, and the provided data
 Generate 3-4 actionable, data-driven, and quantifiable recommendations that aim to:
 1. Increase revenue or reduce expenses by at least 10%.

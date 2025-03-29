@@ -2,7 +2,7 @@ torch
 transformers
 langchain
 langchain_community
-pypdf
 numpy
 pandas
 faiss-cpu
+pypdf
