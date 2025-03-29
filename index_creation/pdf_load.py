@@ -40,10 +40,11 @@ def loadPDF():
             split_docs = text_splitter.split_documents(doc)
             all_docs.extend(split_docs)
 
-            print(f"-------- PDF INFO for {filename} --------")
-            print(f'''Number of Pages in PDF: {pages_num}
-Number of Characters in PDF: {total_char_count}
-Number of Tokens in PDF: {total_token_count}''')
+#uncomment only to see pdf properties
+#             print(f"-------- PDF INFO for {filename} --------") p
+#             print(f'''Number of Pages in PDF: {pages_num}
+# Number of Characters in PDF: {total_char_count}
+# Number of Tokens in PDF: {total_token_count}''')
 
     return all_docs
 
